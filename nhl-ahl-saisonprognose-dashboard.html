@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Saisonprognose 26/27 — NHL & AHL</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0b0d;
+    --panel:#131519;
+    --panel-2:#1b1e23;
+    --line:#282b31;
+    --text:#f2f3f4;
+    --text-dim:#9aa0a6;
+    --text-dim-2:#6d7278;
+    --silver:#aeb6bc;
+    --red:#ffb81c;
+    --red-bright:#ffc72c;
+    --red-dim:#8a6a12;
+    --gold:#b9975b;
+    --font-display:'Oswald', 'Arial Narrow', sans-serif;
+    --font-body:'Inter', system-ui, -apple-system, sans-serif;
+    --radius:2px;
+  }
+  :root:not([data-theme="light"]){
+    --bg:#0a0b0d; --panel:#131519; --panel-2:#1b1e23; --line:#282b31; --text:#f2f3f4; --text-dim:#9aa0a6;
+  }
+  :root[data-theme="dark"]{
+    --bg:#0a0b0d; --panel:#131519; --panel-2:#1b1e23; --line:#282b31; --text:#f2f3f4; --text-dim:#9aa0a6;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){ --bg:#0a0b0d; --panel:#131519; --panel-2:#1b1e23; --line:#282b31; --text:#f2f3f4; --text-dim:#9aa0a6; }
+  }
+
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{background:var(--bg); color:var(--text); font-family:var(--font-body); min-height:100%;}
+  body{
+    background:
+      radial-gradient(ellipse 900px 500px at 15% -10%, rgba(200,16,46,0.10), transparent 60%),
+      radial-gradient(ellipse 700px 500px at 100% 0%, rgba(174,182,188,0.05), transparent 55%),
+      var(--bg);
+    padding-bottom:64px;
+  }
+  ::selection{ background:var(--red); color:#161616; }
+
+  .wrap{ max-width:1080px; margin:0 auto; padding:0 20px; }
+
+  /* ---------- HEADER ---------- */
+  header.top{
+    border-bottom:1px solid var(--line);
+    background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
+  }
+  .top-inner{
+    display:flex; align-items:center; gap:16px;
+    padding:22px 20px 20px;
+    max-width:1080px; margin:0 auto;
+  }
+  .mark{
+    width:46px; height:46px; flex:none;
+    border-radius:50%;
+    background:conic-gradient(from 220deg, var(--red), var(--red-dim) 40%, #1b1e23 41%, #1b1e23 100%);
+    display:flex; align-items:center; justify-content:center;
+    border:1px solid var(--line);
+  }
+  .mark span{
+    font-family:var(--font-display); font-weight:700; font-size:15px; letter-spacing:0.5px; color:#fff;
+  }
+  h1{
+    font-family:var(--font-display); font-weight:700; font-size:clamp(24px,4vw,34px);
+    letter-spacing:0.5px; line-height:1; text-transform:uppercase;
+  }
+  h1 em{ font-style:normal; color:var(--red-bright); }
+  .top-sub{ color:var(--text-dim); font-size:13px; margin-top:6px; }
+  .top-sub a{ color:var(--silver); }
+
+  /* ---------- LEAGUE TOGGLE ---------- */
+  .league-toggle{
+    margin-top:28px;
+    display:flex; gap:2px;
+    border-bottom:1px solid var(--line);
+  }
+  .league-btn{
+    font-family:var(--font-display); font-weight:600; font-size:17px; letter-spacing:0.5px;
+    text-transform:uppercase; color:var(--text-dim);
+    background:none; border:none; cursor:pointer;
+    padding:10px 4px 12px; margin-right:26px;
+    position:relative;
+  }
+  .league-btn .cnt{ font-family:var(--font-body); font-size:11px; color:var(--text-dim-2); font-weight:600; margin-left:6px; }
+  .league-btn::after{
+    content:''; position:absolute; left:0; right:0; bottom:-1px; height:3px; background:var(--red);
+    transform:scaleX(0); transform-origin:left; transition:transform .25s ease;
+  }
+  .league-btn.active{ color:#fff; }
+  .league-btn.active::after{ transform:scaleX(1); }
+  .league-btn:focus-visible{ outline:2px solid var(--red-bright); outline-offset:2px; }
+
+  /* ---------- CATEGORY CHIPS ---------- */
+  .chips-row{
+    margin-top:18px;
+    display:flex; gap:8px; overflow-x:auto; padding-bottom:6px;
+    scrollbar-width:thin;
+  }
+  .chips-row::-webkit-scrollbar{ height:5px; }
+  .chips-row::-webkit-scrollbar-thumb{ background:var(--line); }
+  .chip{
+    flex:none; font-family:var(--font-body); font-weight:600; font-size:13px;
+    color:var(--text-dim); background:var(--panel); border:1px solid var(--line);
+    padding:9px 16px; border-radius:999px; cursor:pointer; white-space:nowrap;
+    transition:background .15s, color .15s, border-color .15s;
+  }
+  .chip:hover{ border-color:var(--silver); color:var(--text); }
+  .chip.active{ background:var(--red); border-color:var(--red); color:#161616; }
+  .chip:focus-visible{ outline:2px solid var(--red-bright); outline-offset:2px; }
+
+  /* ---------- PANEL ---------- */
+  .panel{
+    margin-top:20px;
+    background:var(--panel);
+    border:1px solid var(--line);
+  }
+  .panel-head{
+    display:flex; justify-content:space-between; align-items:flex-start; gap:16px;
+    padding:22px 22px 16px;
+    border-bottom:1px solid var(--line);
+  }
+  .panel-head h2{
+    font-family:var(--font-display); font-weight:600; font-size:22px; text-transform:uppercase; letter-spacing:0.3px;
+  }
+  .panel-head .q{
+    color:var(--text-dim); font-size:13px; margin-top:5px; max-width:60ch;
+  }
+  .panel-head .leader-tag{
+    font-size:11px; color:var(--text-dim-2); text-align:right; white-space:nowrap; margin-top:3px;
+  }
+  .panel-head .leader-tag b{ color:var(--red-bright); font-family:var(--font-display); font-size:13px; letter-spacing:0.3px; }
+
+  .sort-row{
+    display:flex; gap:6px; padding:14px 22px 0;
+  }
+  .sort-btn{
+    font-size:11px; letter-spacing:0.6px; text-transform:uppercase; font-weight:600;
+    color:var(--text-dim-2); background:none; border:1px solid transparent; cursor:pointer;
+    padding:5px 9px; border-radius:2px;
+  }
+  .sort-btn.active{ color:var(--text); background:var(--panel-2); border-color:var(--line); }
+  .sort-btn:hover{ color:var(--text); }
+
+  .rows{ padding:8px 22px 22px; }
+  .row{
+    display:grid;
+    grid-template-columns:26px 34px 1fr 64px 80px;
+    align-items:center;
+    gap:12px;
+    padding:9px 0;
+    border-bottom:1px solid rgba(255,255,255,0.04);
+  }
+  .row:last-child{ border-bottom:none; }
+  .row .rank{ font-family:var(--font-display); font-size:13px; color:var(--text-dim-2); text-align:right; }
+  .row.zero .rank{ color:#3a3d42; }
+  .badge{
+    width:32px; height:32px; border-radius:50%;
+    background:var(--panel-2); border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-display); font-size:10px; font-weight:600; letter-spacing:0.3px; color:var(--silver);
+  }
+  .row.leader .badge{ background:var(--red); border-color:var(--red); color:#161616; }
+  .row.zero .badge{ opacity:0.35; }
+
+  .team-col{ min-width:0; }
+  .team-name{
+    font-size:14px; font-weight:600; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .row.zero .team-name{ color:var(--text-dim-2); font-weight:500; }
+  .bar-track{
+    margin-top:5px; height:6px; background:var(--panel-2); border-radius:99px; overflow:hidden;
+  }
+  .bar-fill{
+    height:100%; border-radius:99px;
+    background:linear-gradient(90deg, var(--red-dim), var(--red-bright));
+    width:0%;
+    transition:width .7s cubic-bezier(.2,.7,.2,1);
+  }
+  .row.leader .bar-fill{ background:linear-gradient(90deg, var(--red), #ff2d4d); }
+
+  .pct{
+    font-family:var(--font-display); font-weight:600; font-size:15px; text-align:right; color:var(--text);
+    font-variant-numeric:tabular-nums;
+  }
+  .row.zero .pct{ color:var(--text-dim-2); font-weight:400; }
+  .subs{ font-size:11.5px; color:var(--text-dim-2); text-align:right; white-space:nowrap; }
+
+  @media(max-width:600px){
+    .row{ grid-template-columns:20px 28px 1fr 50px; }
+    .subs{ display:none; }
+    .panel-head{ flex-direction:column; }
+    .panel-head .leader-tag{ text-align:left; }
+  }
+
+  footer{
+    max-width:1080px; margin:34px auto 0; padding:0 20px;
+    color:var(--text-dim-2); font-size:11.5px; display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .bar-fill{ transition:none; }
+    .league-btn::after{ transition:none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-inner">
+    <div class="mark"><span>SP</span></div>
+    <div>
+      <h1>Saison<em>prognose</em> 26/27</h1>
+      <div class="top-sub">Community-Umfrage zur NHL- &amp; AHL-Saison · 22 abgeschlossene Antworten</div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="league-toggle" id="leagueToggle"></div>
+
+  <div class="chips-row" id="chipsRow"></div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <div>
+        <h2 id="catTitle"></h2>
+        <div class="q" id="catQuestion"></div>
+      </div>
+      <div class="leader-tag" id="leaderTag"></div>
+    </div>
+    <div class="sort-row">
+      <button class="sort-btn active" data-sort="rank">Ranking</button>
+      <button class="sort-btn" data-sort="alpha">A–Z</button>
+    </div>
+    <div class="rows" id="rows"></div>
+  </div>
+
+  <footer>
+    <span>Quelle: involve.me Umfrage-Analytics · 22 von 22 vollständigen Antworten je Frage</span>
+    <span>Inoffizielles Fan-Dashboard</span>
+  </footer>
+
+</div>
+
+<script>
+const CODES = {
+  "Boston Bruins":"BOS","Buffalo Sabres":"BUF","Detroit Red Wings":"DET","Florida Panthers":"FLA",
+  "Montreal Canadiens":"MTL","Ottawa Senators":"OTT","Tampa Bay Lightning":"TBL","Toronto Maple Leafs":"TML",
+  "Carolina Hurricanes":"CAR","Columbus Blue Jackets":"CBJ","New Jersey Devils":"NJD","New York Islanders":"NYI",
+  "New York Rangers":"NYR","Philadelphia Flyers":"PHI","Pittsburgh Penguins":"PIT","Washington Capitals":"WSH",
+  "Chicago Blackhawks":"CHI","Colorado Avalanche":"COL","Dallas Stars":"DAL","Minnesota Wild":"MIN",
+  "Nashville Predators":"NSH","St. Louis Blues":"STL","Utah Mammoth":"UTA","Winnipeg Jets":"WPG",
+  "Anaheim Ducks":"ANA","Calgary Flames":"CGY","Edmonton Oilers":"EDM","Los Angeles Kings":"LAK",
+  "San Jose Sharks":"SJS","Seattle Kraken":"SEA","Vancouver Canucks":"VAN","Vegas Golden Knights":"VGK",
+  "Bridgeport Islanders":"BRI","Charlotte Checkers":"CLT","Hartford Wolf Pack":"HFD","Hershey Bears":"HER",
+  "Lehigh Valley Phantoms":"LVP","Providence Bruins":"PRO","Springfield Thunderbirds":"SPR",
+  "Wilkes-Barre/Scranton Penguins":"WBS","Belleville Senators":"BEL","Cleveland Monsters":"CLE",
+  "Laval Rocket":"LAV","Rochester Americans":"ROC","Syracuse Crunch":"SYR","Toronto Marlies":"TMR",
+  "Utica Comets":"UTC","Chicago Wolves":"CHW","Grand Rapids Griffins":"GRG","Iowa Wild":"IOW",
+  "Manitoba Moose":"MB","Milwaukee Admirals":"MIL","Rockford IceHogs":"RFD","Texas Stars":"TEX",
+  "Abbotsford Canucks":"ABB","Bakersfield Condors":"BAK","Calgary Wranglers":"WRA",
+  "Coachella Valley Firebirds":"CVF","Colorado Eagles":"CEA","Henderson Silver Knights":"HEN",
+  "Ontario Reign":"ONT","San Diego Gulls":"SDG","San Jose Barracuda":"SJB","Tucson Roadrunners":"TUC"
+};
+
+function t(name, pct, subs){ return {name, pct, subs}; }
+
+const DATA = {
+  nhl: {
+    name:"NHL",
+    cats:[
+      {id:'atlantic', label:'Atlantic', question:'Welches Team gewinnt die Atlantic Division?', teams:[
+        t("Boston Bruins",0,0), t("Buffalo Sabres",59.1,13), t("Detroit Red Wings",0,0), t("Florida Panthers",9.1,2),
+        t("Montreal Canadiens",0,0), t("Ottawa Senators",0,0), t("Tampa Bay Lightning",31.8,7), t("Toronto Maple Leafs",0,0)
+      ]},
+      {id:'metro', label:'Metro', question:'Welches Team gewinnt die Metro Division?', teams:[
+        t("Carolina Hurricanes",9.1,2), t("Columbus Blue Jackets",68.2,15), t("New Jersey Devils",9.1,2),
+        t("New York Islanders",0,0), t("New York Rangers",4.5,1), t("Philadelphia Flyers",0,0),
+        t("Pittsburgh Penguins",9.1,2), t("Washington Capitals",0,0)
+      ]},
+      {id:'central', label:'Central', question:'Welches Team gewinnt die Central Division?', teams:[
+        t("Chicago Blackhawks",13.6,3), t("Colorado Avalanche",22.7,5), t("Dallas Stars",4.5,1), t("Minnesota Wild",59.1,13),
+        t("Nashville Predators",0,0), t("St. Louis Blues",0,0), t("Utah Mammoth",0,0), t("Winnipeg Jets",0,0)
+      ]},
+      {id:'pacific', label:'Pacific', question:'Welches Team gewinnt die Pacific Division?', teams:[
+        t("Anaheim Ducks",0,0), t("Calgary Flames",4.5,1), t("Edmonton Oilers",9.1,2), t("Los Angeles Kings",0,0),
+        t("San Jose Sharks",31.8,7), t("Seattle Kraken",4.5,1), t("Vancouver Canucks",0,0), t("Vegas Golden Knights",50,11)
+      ]},
+      {id:'surprise', label:'Überraschung', question:'Welches Team wird positiv überraschen?', teams:[
+        t("Anaheim Ducks",0,0), t("Boston Bruins",0,0), t("Buffalo Sabres",0,0), t("Calgary Flames",13.6,3),
+        t("Carolina Hurricanes",4.5,1), t("Chicago Blackhawks",18.2,4), t("Colorado Avalanche",0,0),
+        t("Columbus Blue Jackets",4.5,1), t("Dallas Stars",0,0), t("Detroit Red Wings",0,0), t("Edmonton Oilers",4.5,1),
+        t("Florida Panthers",31.8,7), t("Los Angeles Kings",0,0), t("Minnesota Wild",0,0), t("Montreal Canadiens",0,0),
+        t("Nashville Predators",4.5,1), t("New Jersey Devils",0,0), t("New York Islanders",4.5,1), t("New York Rangers",0,0),
+        t("Ottawa Senators",4.5,1), t("Philadelphia Flyers",0,0), t("Pittsburgh Penguins",0,0), t("San Jose Sharks",0,0),
+        t("Seattle Kraken",0,0), t("St. Louis Blues",4.5,1), t("Tampa Bay Lightning",0,0), t("Toronto Maple Leafs",4.5,1),
+        t("Utah Mammoth",0,0), t("Vancouver Canucks",0,0), t("Vegas Golden Knights",0,0), t("Washington Capitals",0,0),
+        t("Winnipeg Jets",0,0)
+      ]},
+      {id:'east', label:'Eastern Conf.', question:'Welches Team gewinnt die Eastern Conf.?', teams:[
+        t("New York Islanders",0,0), t("Detroit Red Wings",0,0), t("New York Rangers",4.5,1), t("Carolina Hurricanes",0,0),
+        t("Ottawa Senators",0,0), t("Florida Panthers",0,0), t("Philadelphia Flyers",0,0), t("Buffalo Sabres",36.4,8),
+        t("Pittsburgh Penguins",0,0), t("Montreal Canadiens",0,0), t("Tampa Bay Lightning",4.5,1),
+        t("Columbus Blue Jackets",54.5,12), t("Toronto Maple Leafs",0,0), t("New Jersey Devils",0,0),
+        t("Washington Capitals",0,0), t("Boston Bruins",0,0)
+      ]},
+      {id:'west', label:'Western Conf.', question:'Welches Team gewinnt die Western Conf.?', teams:[
+        t("Nashville Predators",0,0), t("Dallas Stars",0,0), t("San Jose Sharks",18.2,4), t("Chicago Blackhawks",9.1,2),
+        t("Seattle Kraken",4.5,1), t("Edmonton Oilers",0,0), t("St. Louis Blues",0,0), t("Calgary Flames",0,0),
+        t("Utah Mammoth",0,0), t("Los Angeles Kings",0,0), t("Vancouver Canucks",0,0), t("Colorado Avalanche",4.5,1),
+        t("Vegas Golden Knights",36.4,8), t("Minnesota Wild",27.3,6), t("Winnipeg Jets",0,0), t("Anaheim Ducks",0,0)
+      ]},
+      {id:'cup', label:'Stanley Cup', question:'Welches Team gewinnt den Stanley Cup?', teams:[
+        t("Anaheim Ducks",0,0), t("Boston Bruins",0,0), t("Buffalo Sabres",18.2,4), t("Calgary Flames",0,0),
+        t("Carolina Hurricanes",0,0), t("Chicago Blackhawks",4.5,1), t("Colorado Avalanche",0,0),
+        t("Columbus Blue Jackets",36.4,8), t("Dallas Stars",0,0), t("Detroit Red Wings",0,0), t("Edmonton Oilers",0,0),
+        t("Florida Panthers",4.5,1), t("Los Angeles Kings",0,0), t("Minnesota Wild",4.5,1), t("Montreal Canadiens",0,0),
+        t("Nashville Predators",0,0), t("New Jersey Devils",0,0), t("New York Islanders",0,0), t("New York Rangers",0,0),
+        t("Ottawa Senators",0,0), t("Philadelphia Flyers",0,0), t("Pittsburgh Penguins",0,0), t("San Jose Sharks",4.5,1),
+        t("Seattle Kraken",4.5,1), t("St. Louis Blues",0,0), t("Tampa Bay Lightning",9.1,2), t("Toronto Maple Leafs",0,0),
+        t("Utah Mammoth",0,0), t("Vancouver Canucks",0,0), t("Vegas Golden Knights",13.6,3), t("Washington Capitals",0,0),
+        t("Winnipeg Jets",0,0)
+      ]},
+    ]
+  },
+  ahl: {
+    name:"AHL",
+    cats:[
+      {id:'atlantic', label:'Atlantic', question:'Welches Team gewinnt die Atlantic Division?', teams:[
+        t("Bridgeport Islanders",4.5,1), t("Charlotte Checkers",45.5,10), t("Hartford Wolf Pack",4.5,1),
+        t("Hershey Bears",18.2,4), t("Lehigh Valley Phantoms",4.5,1), t("Providence Bruins",4.5,1),
+        t("Springfield Thunderbirds",4.5,1), t("Wilkes-Barre/Scranton Penguins",13.6,3)
+      ]},
+      {id:'north', label:'North', question:'Welches Team gewinnt die North Division?', teams:[
+        t("Belleville Senators",18.2,4), t("Cleveland Monsters",13.6,3), t("Laval Rocket",22.7,5),
+        t("Rochester Americans",13.6,3), t("Syracuse Crunch",4.5,1), t("Toronto Marlies",9.1,2), t("Utica Comets",18.2,4)
+      ]},
+      {id:'central', label:'Central', question:'Welches Team gewinnt die Central Division?', teams:[
+        t("Chicago Wolves",22.7,5), t("Grand Rapids Griffins",4.5,1), t("Iowa Wild",22.7,5), t("Manitoba Moose",9.1,2),
+        t("Milwaukee Admirals",4.5,1), t("Rockford IceHogs",31.8,7), t("Texas Stars",4.5,1)
+      ]},
+      {id:'pacific', label:'Pacific', question:'Welches Team gewinnt die Pacific Division?', teams:[
+        t("Abbotsford Canucks",9.1,2), t("Bakersfield Condors",4.5,1), t("Calgary Wranglers",22.7,5),
+        t("Coachella Valley Firebirds",0,0), t("Colorado Eagles",45.5,10), t("Henderson Silver Knights",9.1,2),
+        t("Ontario Reign",0,0), t("San Diego Gulls",4.5,1), t("San Jose Barracuda",0,0), t("Tucson Roadrunners",4.5,1)
+      ]},
+      {id:'east', label:'Eastern Conf.', question:'Welches Team gewinnt die Eastern Conf.?', teams:[
+        t("Belleville Senators",4.5,1), t("Bridgeport Islanders",9.1,2), t("Charlotte Checkers",27.3,6),
+        t("Cleveland Monsters",4.5,1), t("Hartford Wolf Pack",9.1,2), t("Hershey Bears",4.5,1), t("Laval Rocket",13.6,3),
+        t("Lehigh Valley Phantoms",0,0), t("Providence Bruins",0,0), t("Rochester Americans",9.1,2),
+        t("Springfield Thunderbirds",4.5,1), t("Syracuse Crunch",0,0), t("Toronto Marlies",0,0),
+        t("Utica Comets",4.5,1), t("Wilkes-Barre/Scranton Penguins",9.1,2)
+      ]},
+      {id:'west', label:'Western Conf.', question:'Welches Team gewinnt die Western Conf.?', teams:[
+        t("Abbotsford Canucks",9.1,2), t("Bakersfield Condors",0,0), t("Calgary Wranglers",4.5,1),
+        t("Chicago Wolves",4.5,1), t("Coachella Valley Firebirds",0,0), t("Colorado Eagles",0,0),
+        t("Grand Rapids Griffins",0,0), t("Henderson Silver Knights",9.1,2), t("Iowa Wild",36.4,8),
+        t("Manitoba Moose",4.5,1), t("Milwaukee Admirals",0,0), t("Ontario Reign",0,0), t("Rockford IceHogs",18.2,4),
+        t("San Diego Gulls",4.5,1), t("San Jose Barracuda",0,0), t("Texas Stars",9.1,2), t("Tucson Roadrunners",0,0)
+      ]},
+      {id:'calder', label:'Calder Cup', question:'Welches Team gewinnt den Calder Cup?', teams:[
+        t("Abbotsford Canucks",9.1,2), t("Bakersfield Condors",4.5,1), t("Belleville Senators",0,0),
+        t("Bridgeport Islanders",4.5,1), t("Calgary Wranglers",0,0), t("Charlotte Checkers",4.5,1),
+        t("Chicago Wolves",4.5,1), t("Cleveland Monsters",0,0), t("Coachella Valley Firebirds",0,0),
+        t("Colorado Eagles",0,0), t("Grand Rapids Griffins",0,0), t("Hartford Wolf Pack",4.5,1),
+        t("Henderson Silver Knights",4.5,1), t("Hershey Bears",0,0), t("Iowa Wild",31.8,7), t("Laval Rocket",4.5,1),
+        t("Lehigh Valley Phantoms",0,0), t("Manitoba Moose",0,0), t("Milwaukee Admirals",0,0), t("Ontario Reign",0,0),
+        t("Providence Bruins",0,0), t("Rochester Americans",0,0), t("Rockford IceHogs",22.7,5), t("San Diego Gulls",0,0),
+        t("San Jose Barracuda",0,0), t("Springfield Thunderbirds",0,0), t("Syracuse Crunch",0,0), t("Texas Stars",4.5,1),
+        t("Toronto Marlies",0,0), t("Tucson Roadrunners",0,0), t("Utica Comets",0,0),
+        t("Wilkes-Barre/Scranton Penguins",0,0)
+      ]},
+    ]
+  }
+};
+
+let state = { league:'nhl', cat:'atlantic', sort:'rank' };
+
+function renderLeagueToggle(){
+  const el = document.getElementById('leagueToggle');
+  el.innerHTML = Object.keys(DATA).map(key => `
+    <button class="league-btn ${key===state.league?'active':''}" data-league="${key}">
+      ${DATA[key].name}
+    </button>
+  `).join('');
+  el.querySelectorAll('.league-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      state.league = btn.dataset.league;
+      state.cat = DATA[state.league].cats[0].id;
+      renderAll();
+    });
+  });
+}
+
+function renderChips(){
+  const el = document.getElementById('chipsRow');
+  const cats = DATA[state.league].cats;
+  el.innerHTML = cats.map(c => `
+    <button class="chip ${c.id===state.cat?'active':''}" data-cat="${c.id}">${c.label}</button>
+  `).join('');
+  el.querySelectorAll('.chip').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      state.cat = btn.dataset.cat;
+      renderPanel();
+      el.querySelectorAll('.chip').forEach(c=>c.classList.toggle('active', c.dataset.cat===state.cat));
+    });
+  });
+}
+
+function currentCat(){
+  return DATA[state.league].cats.find(c=>c.id===state.cat);
+}
+
+function renderPanel(){
+  const cat = currentCat();
+  document.getElementById('catTitle').textContent = cat.label;
+  document.getElementById('catQuestion').textContent = cat.question + ' — 22 von 22 Teilnehmenden haben geantwortet.';
+
+  let teams = [...cat.teams];
+  const leader = teams.reduce((a,b)=> b.pct>a.pct ? b : a, teams[0]);
+
+  if(state.sort==='rank'){
+    teams.sort((a,b)=> b.pct - a.pct || a.name.localeCompare(b.name));
+  } else {
+    teams.sort((a,b)=> a.name.localeCompare(b.name));
+  }
+
+  document.getElementById('leaderTag').innerHTML = leader.pct>0
+    ? `Favorit<br><b>${leader.name}</b> · ${leader.pct.toFixed(1).replace('.',',')}%`
+    : '';
+
+  const rowsEl = document.getElementById('rows');
+  rowsEl.innerHTML = teams.map((team, i)=>{
+    const isLeader = team.pct>0 && team===leader && state.sort==='rank';
+    const isZero = team.pct===0;
+    const code = CODES[team.name] || team.name.slice(0,3).toUpperCase();
+    const rankLabel = state.sort==='rank' ? (i+1) : '·';
+    return `
+      <div class="row ${isLeader?'leader':''} ${isZero?'zero':''}">
+        <div class="rank">${rankLabel}</div>
+        <div class="badge">${code}</div>
+        <div class="team-col">
+          <div class="team-name">${team.name}</div>
+          <div class="bar-track"><div class="bar-fill" data-width="${team.pct}"></div></div>
+        </div>
+        <div class="pct">${team.pct.toFixed(1).replace('.',',')}%</div>
+        <div class="subs">${team.subs} ${team.subs===1?'Antwort':'Antworten'}</div>
+      </div>
+    `;
+  }).join('');
+
+  requestAnimationFrame(()=>{
+    rowsEl.querySelectorAll('.bar-fill').forEach((bar, idx)=>{
+      setTimeout(()=>{ bar.style.width = bar.dataset.width + '%'; }, 15*idx);
+    });
+  });
+}
+
+document.querySelectorAll('.sort-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    state.sort = btn.dataset.sort;
+    document.querySelectorAll('.sort-btn').forEach(b=>b.classList.toggle('active', b===btn));
+    renderPanel();
+  });
+});
+
+function renderAll(){
+  renderLeagueToggle();
+  renderChips();
+  renderPanel();
+}
+
+renderAll();
+</script>
+
+</body>
+</html>
